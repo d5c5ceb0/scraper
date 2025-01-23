@@ -50,24 +50,24 @@ class AddMessage(Resource):
             message=args['message'],
             timestamp=db.func.now(),
         )
-        try:
-            db.session.add(message)
-            db.session.commit()
-        except IntegrityError as e:
-            logging.error(e)
-            db.session.rollback()
-            return {'result': 'error'}, 500
-        try:
-            builder = EventBuilder.text_note(
-                "Test from rust-nostr Python bindings!")
-            asyncio.run(nostrCli.send_event(builder))
-            custom_keys = Keys.generate()
-            event = EventBuilder.text_note(
-                "Hello from rust-nostr Python bindings!").pow(20).sign_with_keys(custom_keys)
-            output = asyncio.run(nostrCli.send_event(event))
-            logging.info(f"send event output: {output}")
-        except Exception as e:
-            logging.error(e)
+        # try:
+        #     db.session.add(message)
+        #     db.session.commit()
+        # except IntegrityError as e:
+        #     logging.error(e)
+        #     db.session.rollback()
+        #     return {'result': 'error'}, 500
+        # try:
+        #     builder = EventBuilder.text_note(
+        #         "Test from rust-nostr Python bindings!")
+        #     asyncio.run(nostrCli.send_event(builder))
+        #     custom_keys = Keys.generate()
+        #     event = EventBuilder.text_note(
+        #         "Hello from rust-nostr Python bindings!").pow(20).sign_with_keys(custom_keys)
+        #     output = asyncio.run(nostrCli.send_event(event))
+        #     logging.info(f"send event output: {output}")
+        # except Exception as e:
+        #     logging.error(e)
         return {'result': 'ok'}, 200
 
 
