@@ -13,10 +13,10 @@ services:
     restart: always
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "admin", "--password=admin"]
-      interval: 10s       # 健康检查的时间间隔
-      timeout: 5s         # 每次健康检查的超时时间
-      retries: 50          # 最大重试次数，超过后标记为不健康
-      start_period: 30s   # 容器启动后等待的时间，避免数据库初始化过程中的错误
+      interval: 10s      
+      timeout: 5s         
+      retries: 50          
+      start_period: 30s 
   scraper:
     image: scraper:latest
     # build:
