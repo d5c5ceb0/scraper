@@ -21,4 +21,4 @@ COPY . /app
 EXPOSE 5000
 
 # Command to run the Flask app
-CMD ["/bin/sh", "-c", "cd /app/api flask db upgrade && flask run --host=0.0.0.0"]
+CMD ["/bin/sh", "-c", "cd /app/api && sleep 60 && echo upgrade && flask db upgrade && echo run && flask run --host=0.0.0.0"]
