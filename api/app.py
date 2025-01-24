@@ -1,5 +1,5 @@
 # -*- coding:utf-8 -*-
-from controllers.service_api.doc import nostrCli
+from controllers.service_api.doc import nostrCli, setKeys, setRelayers
 from nostr_sdk import *
 import asyncio
 import os
@@ -58,18 +58,11 @@ def create_app() -> Flask:
     logging.info(f"db uri:{uri}")
 
     privKey = app.config.get("NOSTR_PRIV_KEY")
-    keys = Keys.parse(privKey)
-    signer = NostrSigner.keys(keys)
+    ikeys = Keys.parse(privKey)
+    setKeys(ikeys)
+    setRelayers(app.config.get("NOSTR_RELAY_URIS"))
+    signer = NostrSigner.keys(ikeys)
     nostrCli.signer = signer
-
-    relayUri = app.config.get("NOSTR_RELAY_URIS")
-    # split string relayUri by comma
-    relayUri = relayUri.split(',')
-    try:
-        for uri in relayUri:
-            asyncio.run(nostrCli.add_relay(uri))
-    except Exception as e:
-        logging.error(f"add relay error: {e}")
 
     initialize_extensions(app)
     register_blueprints(app)

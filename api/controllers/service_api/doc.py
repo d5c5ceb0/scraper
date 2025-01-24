@@ -1,4 +1,6 @@
 # -*- coding:utf-8 -*-
+import datetime
+from typing import List
 from flask_restful import reqparse
 from . import api
 from flask_restful import Resource, marshal_with, fields, marshal
@@ -35,6 +37,33 @@ groupMessagesFields = {
 }
 
 
+async def sendEvent(tags: List[Tag], message: str):
+    tagPlatform = Tag.parse(["platform", "telegram"])
+    tagT = Tag.parse(
+        ["t", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")])
+    tagP = Tag.parse(["p", "test"])
+    tagG = Tag.parse(["g", "test"])
+    builder = EventBuilder.text_note(
+        message).tags([tagPlatform, tagT, tagP, tagG]).sign_with_keys(keys)
+    relayUrilist = relayUri.split(',')
+    try:
+        for uri in relayUrilist:
+            logging.info(f"add relay uri: {uri}")
+            await nostrCli.add_relay(uri)
+    except Exception as e:
+        logging.error(f"add relay error: {e}")
+    try:
+        output = await nostrCli.connect()
+        logging.info(f"connect output: {output}")
+    except Exception as e:
+        logging.error(f"connect error: {e}")
+    try:
+        output = await nostrCli.send_event(builder)
+        logging.info(f"send event output: {output}")
+    except Exception as e:
+        logging.error(f"send event error: {e}")
+
+
 class AddMessage(Resource):
     def post(self):
         parser = reqparse.RequestParser()
@@ -43,6 +72,7 @@ class AddMessage(Resource):
         parser.add_argument('username', type=str)
         parser.add_argument('message', type=str)
         args = parser.parse_args()
+        timestamp = datetime.datetime.now()
         message = Message(
             group_id=args['group_id'],
             user_id=args['user_id'],
@@ -58,14 +88,12 @@ class AddMessage(Resource):
             db.session.rollback()
             return {'result': 'error'}, 500
         try:
-            builder = EventBuilder.text_note(
-                "Test from rust-nostr Python bindings!")
-            asyncio.run(nostrCli.send_event(builder))
-            custom_keys = Keys.generate()
-            event = EventBuilder.text_note(
-                "Hello from rust-nostr Python bindings!").pow(20).sign_with_keys(custom_keys)
-            output = asyncio.run(nostrCli.send_event(event))
-            logging.info(f"send event output: {output}")
+            tagPlatform = Tag.parse(["platform", "telegram"])
+            tagT = Tag.parse(["t", timestamp.strftime("%Y-%m-%d %H:%M:%S")])
+            tagP = Tag.parse(["p", args['user_id']])
+            tagG = Tag.parse(["g", args['group_id']])
+            asyncio.run(
+                sendEvent([tagPlatform, tagT, tagP, tagG], args['message']))
         except Exception as e:
             logging.error(e)
         return {'result': 'ok'}, 200
@@ -117,6 +145,16 @@ class getMessageByGroup(Resource):
             'cnt': len(messages)
         }
         return marshal(result, groupMessagesFields)
+
+
+def setKeys(ikeys: Keys):
+    global keys
+    keys = ikeys
+
+
+def setRelayers(relayers: str):
+    global relayUri
+    relayUri = relayers
 
 
 api.add_resource(AddMessage, '/add_message')
