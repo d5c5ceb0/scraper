@@ -10,6 +10,7 @@ services:
       MYSQL_PASSWORD: admin 
     ports:
       - "3307:3306"
+    restart: always
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "admin", "--password=admin"]
       interval: 10s       # 健康检查的时间间隔
@@ -26,6 +27,7 @@ services:
         condition: service_healthy
     ports:
       - "5000:5000"
+    restart: always
     environment:
       DB_USER: admin
       DB_PASSWORD: admin
