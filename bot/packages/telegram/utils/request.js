@@ -1,5 +1,5 @@
-import axios from 'axios'
-import { addPending, removePending } from './pending.js'
+const axios = require('axios');
+const { addPending, removePending } = require('./pending.js')
 
 const handleResponse = () => { }
 
@@ -15,7 +15,7 @@ const instance = axios.create({
   headers: {
     'Content-Type': 'application/json;charset=UTF-8',
   },
-  method: 'GET',
+  method: 'POST',
 })
 
 instance.interceptors.request.use(
@@ -44,12 +44,12 @@ instance.interceptors.response.use(
 
 async function request(config) {
   return instance.request(config).then((res) => {
-    if (res.data?.ret === 1) {
-      return res.data?.data
+    if(res.status === 200) {
+      return res.data
     } else {
-      return Promise.reject(res.data)
+      return res
     }
   })
 }
 
-export default request
+module.exports = request

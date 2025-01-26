@@ -1,10 +1,10 @@
-import axios from 'axios';
-export const pending = new Map();
+const axios = require('axios');
+const pending = new Map();
 
 /**
  * @param config
  */
-export const addPending = (config) => {
+const addPending = (config) => {
   const url = [
     config.method,
     config.url,
@@ -24,7 +24,7 @@ export const addPending = (config) => {
 /**
  * @param config
  */
-export const removePending = (config) => {
+const removePending = (config) => {
   const url = [
     config.method,
     config.url,
@@ -38,10 +38,17 @@ export const removePending = (config) => {
   }
 };
 
-export const clearPending = () => {
+const clearPending = () => {
   pending.forEach((url) => {
     const cancel = (url) => pending.get(url);
     cancel(url);
   });
   pending.clear();
 };
+
+module.exports = {
+  pending,
+  addPending,
+  removePending,
+  clearPending
+}

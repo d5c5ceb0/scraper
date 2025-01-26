@@ -1,27 +1,30 @@
-import TelegramBot from 'node-telegram-bot-api';
-import request from './utils/request.js'
+const TelegramBot = require('node-telegram-bot-api');
+const request = require('./utils/request.js')
 
 // Replace 'YOUR_BOT_TOKEN' with the token from BotFather
 const token = `7926431835:AAEjbScqFyl9W6Qu907xOfoGkZ8EKFpvJgM`
 const bot = new TelegramBot(token, { polling: true });
 
 // Listen for any message
-bot.on('message', (msg) => {
+bot.on('message', async (msg) => {
     console.log('on message====', JSON.stringify(msg, null, 2))
     const chatId = msg.chat.id;
     const messageText = msg.text;
     const username = msg.from.username || 'Anonymous';
     const userId = msg.from.id;
-
-    request({
-        url: '/api/add_message',
-        data: {
-            "group_id": chatId,
-            "user_id": userId,
-            "username": username,
-            "message": messageText
-        }
-    })
+    try {
+        request({
+            url: '/api/add_message',
+            data: {
+                "group_id": chatId,
+                "user_id": userId,
+                "username": username,
+                "message": messageText
+            }
+        })
+    } catch (error) {
+        console.error('request error====', error)
+    }
 });
 
 // Error handling
