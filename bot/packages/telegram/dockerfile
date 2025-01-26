@@ -18,4 +18,4 @@ ENV NODE_ENV=production
 ENV TELEGRAM_BOT_TOKEN=7926431835:AAEjbScqFyl9W6Qu907xOfoGkZ8EKFpvJgM
 
 # 启动应用
-CMD ["nodemon", "index.js"]
+CMD ["npm", "start"]

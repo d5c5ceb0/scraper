@@ -13,6 +13,10 @@ docker build -t scraper -f ./backend/Dockerfile ./backend
 NOSTR_PRIV_KEY: nsec1ufnus6pju578ste3v90xd5m2decpuzpql2295m3sknqcjzyys9ls0qlc85 #nostr私钥
 NOSTR_RELAY_URIS: wss://relay.damus.io,wss://relay.atoms.io #nostr relay uri，逗号分隔
 ```
+配置bot/packages/telegram/dockerfile中的**TELEGRAM_BOT_TOKEN**
+``` 
+ENV TELEGRAM_BOT_TOKEN=7926431835:AAEjbScqFyl9W6Qu907xOfoGkZ8EKFpvJgM
+```
 启动
 ```
 docker compose up -d

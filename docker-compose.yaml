@@ -37,3 +37,12 @@ services:
       SQLALCHEMY_POOL_SIZE: 10
       NOSTR_PRIV_KEY: nsec1ufnus6pju578ste3v90xd5m2decpuzpql2295m3sknqcjzyys9ls0qlc85
       NOSTR_RELAY_URIS: wss://relay.damus.io
+  telegram-bot:
+    image: node:20-alpine
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    tty: true
+    restart: always
+    volumes:
+        - ./bot/packages/telegram:/app
