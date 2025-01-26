@@ -31,20 +31,20 @@ userMessagesFields = {
     "cnt": fields.Integer,
 }
 
-groupMessagesFields = {
-    "user_messages": fields.List(fields.Nested(userMessagesFields)),
+userMessagesCntFields = {
+    "user_id": fields.String,
     "cnt": fields.Integer,
+}
+
+groupMessagesCntFields = {
+    "user_msg_cnt": fields.List(fields.Nested(userMessagesCntFields)),
+    "group_cnt": fields.Integer,
 }
 
 
 async def sendEvent(tags: List[Tag], message: str):
-    tagPlatform = Tag.parse(["platform", "telegram"])
-    tagT = Tag.parse(
-        ["t", datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")])
-    tagP = Tag.parse(["p", "test"])
-    tagG = Tag.parse(["g", "test"])
     builder = EventBuilder.text_note(
-        message).tags([tagPlatform, tagT, tagP, tagG]).sign_with_keys(keys)
+        message).tags(tags=tags).sign_with_keys(keys)
     relayUrilist = relayUri.split(',')
     try:
         for uri in relayUrilist:
@@ -103,14 +103,26 @@ class getMessageByUser(Resource):
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('user_id', type=str)
+        parser.add_argument('group_id', type=str)
+        parser.add_argument('page_num', type=int)
+        parser.add_argument('page_size', type=int)
         args = parser.parse_args()
+        if args['page_num'] < 1:
+            args['page_num'] = 1
         try:
             messages = db.session.query(Message).filter(
-                Message.user_id == args['user_id']).all()
+                Message.user_id == args['user_id']).filter(
+                Message.group_id == args['group_id']).order_by(
+                Message.id.desc()).offset(
+                (args['page_num'] - 1) * args['page_size']).limit(
+                args['page_size']).all()
+            cnt = db.session.query(Message).filter(
+                Message.user_id == args['user_id']).filter(
+                Message.group_id == args['group_id']).count()
             result = {
                 "user_id": args['user_id'],
                 "messages": messages,
-                "cnt": len(messages)
+                "cnt": cnt
             }
         except Exception as e:
             logging.error(e)
@@ -118,33 +130,41 @@ class getMessageByUser(Resource):
         return marshal(result, userMessagesFields)
 
 
-class getMessageByGroup(Resource):
+class getMessageCntByGroup(Resource):
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('group_id', type=str)
         args = parser.parse_args()
+        user_msg_cnt = []
         try:
-            messages = db.session.query(Message).filter(
-                Message.group_id == args['group_id']).all()
+            # Query users in the group
+            users = db.session.query(Message.user_id).filter(
+                Message.group_id == args['group_id']).distinct().all()
+            logging.info(f"users: {users}")
+            # Query messages count of each user
+            for user in users:
+                logging.info(f"user: {user}")
+                user_id = user[0]
+                logging.info(f"user_id: {user_id}")
+                cnt = db.session.query(Message).filter(
+                    Message.user_id == user_id).filter(
+                    Message.group_id == args['group_id']).count()
+                user_msg_cnt.append({
+                    "user_id": user_id,
+                    "cnt": cnt
+                })
+            totalCnt = db.session.query(Message).filter(
+                Message.group_id == args['group_id']).count()
+
         except Exception as e:
             logging.error(e)
             return {'result': 'error'}, 500
-        user_messages = {}
-        for message in messages:
-            if message.user_id not in user_messages:
-                user_messages[message.user_id] = {
-                    'user_id': message.user_id,
-                    'messages': [],
-                    'cnt': 0
-                }
-            user_messages[message.user_id]['messages'].append(message)
-            user_messages[message.user_id]['cnt'] += 1
 
         result = {
-            'user_messages': list(user_messages.values()),
-            'cnt': len(messages)
+            'user_msg_cnt': user_msg_cnt,
+            'group_cnt': totalCnt
         }
-        return marshal(result, groupMessagesFields)
+        return marshal(result, groupMessagesCntFields)
 
 
 def setKeys(ikeys: Keys):
@@ -159,4 +179,4 @@ def setRelayers(relayers: str):
 
 api.add_resource(AddMessage, '/add_message')
 api.add_resource(getMessageByUser, '/get_message_by_user')
-api.add_resource(getMessageByGroup, '/get_message_by_group')
+api.add_resource(getMessageCntByGroup, '/get_message_cnt')
