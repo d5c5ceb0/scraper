@@ -11,6 +11,15 @@ import logging
 from sqlalchemy.exc import IntegrityError
 from nostr_sdk import *
 import asyncio
+import hmac
+import hashlib
+import time
+import requests
+import json
+
+API_KEY = ''
+API_SECRET = ''
+API_URL = ''
 
 nostrCli = Client()
 
@@ -99,6 +108,26 @@ class AddMessage(Resource):
         return {'result': 'ok'}, 200
 
 
+class getMessageCntByUser(Resource):
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('user_id', type=str)
+        parser.add_argument('group_id', type=str)
+        args = parser.parse_args()
+        try:
+            cnt = db.session.query(Message).filter(
+                Message.user_id == args['user_id']).filter(
+                Message.group_id == args['group_id']).count()
+            result = {
+                "user_id": args['user_id'],
+                "cnt": cnt
+            }
+        except Exception as e:
+            logging.error(e)
+            return {'result': 'error'}, 500
+        return marshal(result, userMessagesCntFields)
+
+
 class getMessageByUser(Resource):
     def post(self):
         parser = reqparse.RequestParser()
@@ -177,6 +206,59 @@ def setRelayers(relayers: str):
     relayUri = relayers
 
 
+# POST /api/v1/binding/telegram
+
+# //sign by api key&secret
+# //signature = hmac_sha256(api_secret||path||method||body||timestamp)
+# //header("X-API-Key", api_key)         // 设置API Key
+# //header("X-API-Signature", signature)  // 设置生成的签名
+# //header("X-API-Timestamp", timestamp.to_string()) //设置时间戳
+
+# //request body
+# {
+#     "user_id": "bob001",
+#     "token": "",
+# }
+
+# //response 200
+# {
+#     "result": {
+#         "user_id": "bob001",
+#         "lamport_id": "1"
+#     }
+# }
+def generate_signature(api_secret, path, method, body, timestamp):
+    message = f"{api_secret}{path}{method}{body}{timestamp}"
+    signature = hmac.new(api_secret.encode(),
+                         message.encode(), hashlib.sha256).hexdigest()
+    return signature
+
+
+def postBindingMessage(user_id: str, token: str):
+    path = '/api/v1/binding/telegram'
+    method = 'POST'
+    timestamp = str(int(time.time()))
+    body = json.dumps({
+        "user_id": user_id,
+        "token": token
+    })
+
+    signature = generate_signature(API_SECRET, path, method, body, timestamp)
+
+    headers = {
+        "X-API-Key": API_KEY,
+        "X-API-Signature": signature,
+        "X-API-Timestamp": timestamp,
+        "Content-Type": "application/json"
+    }
+    response = requests.post(API_URL, headers=headers, data=body)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        response.raise_for_status()
+
+
 api.add_resource(AddMessage, '/add_message')
 api.add_resource(getMessageByUser, '/get_message_by_user')
 api.add_resource(getMessageCntByGroup, '/get_message_cnt')
+api.add_resource(getMessageCntByUser, '/get_message_cnt_by_user')
