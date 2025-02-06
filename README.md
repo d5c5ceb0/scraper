@@ -109,3 +109,19 @@ docker compose up -d
     "cnt": 2 //用户在群组内消息总数
 }
 ```
+### GetMessageCntByUser
+POST /api/get_message_cnt_by_user
+#### 请求
+``` JSON
+{
+    "group_id":"1001",
+    "user_id":"bob001"
+}
+```
+#### 返回
+``` JSON
+{
+    "user_id": "bob001",
+    "cnt": 2 //用户在群组内消息总数
+}
+```
