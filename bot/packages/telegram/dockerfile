@@ -15,7 +15,7 @@ COPY . .
 
 # 设置环境变量（可选）
 ENV NODE_ENV=production
-ENV TELEGRAM_BOT_TOKEN=7926431835:AAEjbScqFyl9W6Qu907xOfoGkZ8EKFpvJgM
+ENV TELEGRAM_BOT_TOKEN=8106423724:AAFbrDup4l5t8ZoTlV2wxn-bvM7wC5FeN2E
 
 # 启动应用
 CMD ["npm", "start"]
