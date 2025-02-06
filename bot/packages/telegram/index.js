@@ -1,5 +1,5 @@
 const TelegramBot = require('node-telegram-bot-api');
-const request = require('./utils/request.js')
+const { request, request2 } = require('./utils/request.js')
 
 // Replace 'YOUR_BOT_TOKEN' with the token from BotFather
 const token = process?.env?.TELEGRAM_BOT_TOKEN || '7926431835:AAEjbScqFyl9W6Qu907xOfoGkZ8EKFpvJgM'
@@ -17,8 +17,19 @@ bot.on('message', async (msg) => {
         if (messageType === 'bot_command') {
             const [command, ...args] = messageText.slice(1).split(' ');
             if (command === 'bind') {
-                const bindId = args[0];
-                console.log('bindId====', bindId)
+                const token = args[0];
+                console.log('bindId====', token)
+                request2({
+                    url: '/api/v1/user/binding/telegram',
+                    data: {
+                        token,
+                        user_id: `${userId}`,
+                    }
+                }).then(res => {
+                    console.log('res====', res)
+                }).catch(err => {
+                    console.error('request error====', err)
+                })
                 return
             }
         }
@@ -32,6 +43,8 @@ bot.on('message', async (msg) => {
                 "username": username,
                 "message": messageText
             }
+        }).catch(err => {
+            console.error('request error====', err)
         })
     } catch (error) {
         console.error('request error====', error)
