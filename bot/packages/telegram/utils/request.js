@@ -10,7 +10,7 @@ const handleError = (res) => {
 }
 
 const instance = axios.create({
-  baseURL: 'http://18.143.169.0:5000',
+  baseURL: 'http://scraper:5000',
   timeout: 500000,
   headers: {
     'Content-Type': 'application/json;charset=UTF-8',

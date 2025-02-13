@@ -6,6 +6,10 @@
 docker build -t scraper -f ./backend/Dockerfile ./backend
 ```
 
+```
+docker build -t telegram-bot -f ./bot/packages/telegram/dockerfile ./bot/packages/telegram 
+```
+
 ## Deploy
 
 配置docker-compose.yaml
