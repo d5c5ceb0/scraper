@@ -40,6 +40,11 @@ userMessagesFields = {
     "cnt": fields.Integer,
 }
 
+MessagesFields = {
+    "messages": fields.List(fields.Nested(messageFields)),
+    "cnt": fields.Integer,
+}
+
 userMessagesCntFields = {
     "user_id": fields.String,
     "cnt": fields.Integer,
@@ -135,19 +140,57 @@ class getMessageByUser(Resource):
         parser.add_argument('group_id', type=str)
         parser.add_argument('page_num', type=int)
         parser.add_argument('page_size', type=int)
+        parser.add_argument('start_time', type=str, default=None)
+        parser.add_argument('end_time', type=str, default=None)
+
+
         args = parser.parse_args()
+        logging.info(f"args: {args}")
+
+        if args['start_time']:
+            try:
+                datetime.datetime.fromisoformat(args['start_time'])
+           except ValueError:
+                return {'error': 'Invalid start time format, require YYYY-MM-DDTHH:mm:ssZ format'}, 500
+           if not args['start_time'].endswith("Z"):
+                return {'error': 'Invalid start time format, require YYYY-MM-DDTHH:mm:ssZ format'}, 500
+
+        if args['end_time']:
+            try:
+                datetime.datetime.fromisoformat(args['end_time'])
+            except ValueError:
+                return {'error': 'Invalid end time format, require YYYY-MM-DDTHH:mm:ssZ format'}, 500
+            if not args['end_time'].endswith("Z"):
+                return {'error': 'Invalid end time format, require YYYY-MM-DDTHH:mm:ssZ format'}, 500
+
         if args['page_num'] < 1:
             args['page_num'] = 1
         try:
             messages = db.session.query(Message).filter(
                 Message.user_id == args['user_id']).filter(
-                Message.group_id == args['group_id']).order_by(
+                Message.group_id == args['group_id'])
+
+            if args.get('start_time') is not None:
+                messages = messages.filter(Message.created_at >= args['start_time'])
+            if args.get('end_time') is not None:
+                messages = messages.filter(Message.created_at <= args['end_time'])
+
+            messages = messages.order_by(
                 Message.id.desc()).offset(
                 (args['page_num'] - 1) * args['page_size']).limit(
                 args['page_size']).all()
-            cnt = db.session.query(Message).filter(
+
+            query = db.session.query(Message).filter(
                 Message.user_id == args['user_id']).filter(
-                Message.group_id == args['group_id']).count()
+                Message.group_id == args['group_id'])
+
+            if args.get('start_time') is not None:
+                query = query.filter(Message.created_at >= args['start_time'])
+            if args.get('end_time') is not None:
+                query = query.filter(Message.created_at <= args['end_time'])
+
+            cnt = query.count()
+
             result = {
                 "user_id": args['user_id'],
                 "messages": messages,
@@ -157,6 +200,32 @@ class getMessageByUser(Resource):
             logging.error(e)
             return {'result': 'error'}, 500
         return marshal(result, userMessagesFields)
+
+class getMessage(Resource):
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('group_id', type=str)
+        parser.add_argument('page_num', type=int)
+        parser.add_argument('page_size', type=int)
+        args = parser.parse_args()
+        if args['page_num'] < 1:
+            args['page_num'] = 1
+        try:
+            messages = db.session.query(Message).filter(
+                Message.group_id == args['group_id']).order_by(
+                Message.id.desc()).offset(
+                (args['page_num'] - 1) * args['page_size']).limit(
+                args['page_size']).all()
+            cnt = db.session.query(Message).filter(
+                Message.group_id == args['group_id']).count()
+            result = {
+                "messages": messages,
+                "cnt": cnt
+            }
+        except Exception as e:
+            logging.error(e)
+            return {'result': 'error'}, 500
+        return marshal(result, MessagesFields)
 
 
 class getMessageCntByGroup(Resource):
@@ -260,5 +329,6 @@ def postBindingMessage(user_id: str, token: str):
 
 api.add_resource(AddMessage, '/add_message')
 api.add_resource(getMessageByUser, '/get_message_by_user')
+api.add_resource(getMessage, '/get_message')
 api.add_resource(getMessageCntByGroup, '/get_message_cnt')
 api.add_resource(getMessageCntByUser, '/get_message_cnt_by_user')
