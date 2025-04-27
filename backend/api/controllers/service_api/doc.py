@@ -101,15 +101,15 @@ class AddMessage(Resource):
             logging.error(e)
             db.session.rollback()
             return {'result': 'error'}, 500
-        try:
-            tagPlatform = Tag.parse(["platform", "telegram"])
-            tagT = Tag.parse(["t", timestamp.strftime("%Y-%m-%d %H:%M:%S")])
-            tagP = Tag.parse(["p", args['user_id']])
-            tagG = Tag.parse(["g", args['group_id']])
-            asyncio.run(
-                sendEvent([tagPlatform, tagT, tagP, tagG], args['message']))
-        except Exception as e:
-            logging.error(e)
+        #try:
+        #    tagPlatform = Tag.parse(["platform", "telegram"])
+        #    tagT = Tag.parse(["t", timestamp.strftime("%Y-%m-%d %H:%M:%S")])
+        #    tagP = Tag.parse(["p", args['user_id']])
+        #    tagG = Tag.parse(["g", args['group_id']])
+        #    asyncio.run(
+        #        sendEvent([tagPlatform, tagT, tagP, tagG], args['message']))
+        #except Exception as e:
+        #    logging.error(e)
         return {'result': 'ok'}, 200
 
 

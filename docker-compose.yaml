@@ -8,6 +8,9 @@ services:
       MYSQL_DATABASE: tg 
       MYSQL_USER: admin 
       MYSQL_PASSWORD: admin 
+    volumes:
+      - /data/mysql/data:/var/lib/mysql
+      - /data/mysql/conf/my.cnf:/etc/mysql/mysql.conf.d/mysqld.cnf
     ports:
       - "3307:3306"
     restart: always

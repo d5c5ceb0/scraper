@@ -14,25 +14,25 @@ bot.on('message', async (msg) => {
     const userId = msg.from.id;
     const messageType = msg.entities?.[0]?.type || 'text';
     try {
-        if (messageType === 'bot_command') {
-            const [command, ...args] = messageText.slice(1).split(' ');
-            if (command === 'bind') {
-                const token = args[0];
-                console.log('bindId====', token)
-                request2({
-                    url: '/api/v1/user/binding/telegram',
-                    data: {
-                        token,
-                        user_id: `${userId}`,
-                    }
-                }).then(res => {
-                    console.log('res====', res)
-                }).catch(err => {
-                    console.error('request error====', err)
-                })
-                return
-            }
-        }
+        //if (messageType === 'bot_command') {
+        //    const [command, ...args] = messageText.slice(1).split(' ');
+        //    if (command === 'bind') {
+        //        const token = args[0];
+        //        console.log('bindId====', token)
+        //        request2({
+        //            url: '/api/v1/user/binding/telegram',
+        //            data: {
+        //                token,
+        //                user_id: `${userId}`,
+        //            }
+        //        }).then(res => {
+        //            console.log('res====', res)
+        //        }).catch(err => {
+        //            console.error('request error====', err)
+        //        })
+        //        return
+        //    }
+        //}
 
         request({
             url: '/api/add_message',
