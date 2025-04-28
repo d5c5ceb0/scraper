@@ -44,6 +44,42 @@ docker compose up -d
 }
 ```
 
+### GetMessage
+查询群组消息
+### 请求
+
+**POST**
+
+/api/get_message
+
+``` JSON
+{
+    "group_id":"-1002563342584",
+    "page_num":1,
+    "page_size":100,
+    "start_time":"2025-02-17T01:00:00Z",
+    "end_time": "2025-02-18T02:00:00Z"
+}
+```
+#### 返回
+```JSON
+{
+    "messages": [
+        {
+            "id": 7,
+            "group_id": "-1002563342584",
+            "user_id": "1718804264",
+            "username": "d5c5ceb0",
+            "message": "test2",
+            "timestamp": "Mon, 28 Apr 2025 00:27:04 -0000",
+            "created_at": "Mon, 28 Apr 2025 00:27:04 -0000",
+            "updated_at": "Mon, 28 Apr 2025 00:27:04 -0000"
+        }
+    ],
+    "cnt": 1
+}
+```
+
 ### GetMessageCnt
 查询群组消息数
 #### 请求
