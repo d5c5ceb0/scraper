@@ -5,6 +5,9 @@ const { request, request2 } = require('./utils/request.js')
 const token = process?.env?.TELEGRAM_BOT_TOKEN || '8106423724:AAFbrDup4l5t8ZoTlV2wxn-bvM7wC5FeN2E'
 const bot = new TelegramBot(token, { polling: true });
 
+bot.on('my_chat_member', (msg) => {
+});
+
 // Listen for any message
 bot.on('message', async (msg) => {
     console.log('on message====', JSON.stringify(msg, null, 2))

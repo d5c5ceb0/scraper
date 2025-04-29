@@ -45,13 +45,17 @@ MessagesFields = {
     "cnt": fields.Integer,
 }
 
+GroupsFields = {
+    "groups": fields.List(fields.Nested(fields.String)),
+}
+
 userMessagesCntFields = {
     "user_id": fields.String,
     "cnt": fields.Integer,
 }
 
 groupMessagesCntFields = {
-    "user_msg_cnt": fields.List(fields.Nested(userMessagesCntFields)),
+    "user_msg_cnt": fields.List(userMessagesCntFields),
     "group_cnt": fields.Integer,
 }
 
@@ -150,9 +154,9 @@ class getMessageByUser(Resource):
         if args['start_time']:
             try:
                 datetime.datetime.fromisoformat(args['start_time'])
-           except ValueError:
+            except ValueError:
                 return {'error': 'Invalid start time format, require YYYY-MM-DDTHH:mm:ssZ format'}, 500
-           if not args['start_time'].endswith("Z"):
+            if not args['start_time'].endswith("Z"):
                 return {'error': 'Invalid start time format, require YYYY-MM-DDTHH:mm:ssZ format'}, 500
 
         if args['end_time']:
@@ -200,6 +204,20 @@ class getMessageByUser(Resource):
             logging.error(e)
             return {'result': 'error'}, 500
         return marshal(result, userMessagesFields)
+
+class getGroups(Resource):
+    def post(self):
+        try:
+            group_ids = db.session.query(Message.group_id.distinct()).all()
+            group_ids = [str(g[0]) for g in group_ids]
+            group_ids = [gid for gid in group_ids if gid.startswith('-')]
+            result = {
+                "groups": group_ids,
+            }
+        except Exception as e:
+            logging.error(e)
+            return {'result': 'error'}, 500
+        return marshal(result, MessagesFields)
 
 class getMessage(Resource):
     def post(self):
@@ -330,5 +348,6 @@ def postBindingMessage(user_id: str, token: str):
 api.add_resource(AddMessage, '/add_message')
 api.add_resource(getMessageByUser, '/get_message_by_user')
 api.add_resource(getMessage, '/get_message')
+api.add_resource(getGroups, '/get_groups')
 api.add_resource(getMessageCntByGroup, '/get_message_cnt')
 api.add_resource(getMessageCntByUser, '/get_message_cnt_by_user')
